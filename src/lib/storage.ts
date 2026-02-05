@@ -1,4 +1,4 @@
-import { AchievementResult, DiaryEntry, ProfileState } from "@/lib/types";
+import { AchievementResult, DiaryEntry, ProfileState, ProviderConfig } from "@/lib/types";
 
 const API_KEY = "earthonline_api_key";
 const PROVIDER_CONFIG_KEY = "earthonline_provider_config";
@@ -13,7 +13,7 @@ const defaultProfile: ProfileState = {
   nextLevelXP: 100
 };
 
-export const defaultProviderConfig = {
+export const defaultProviderConfig: ProviderConfig = {
   providerType: "user_key",
   apiKey: "",
   baseUrl: "https://open.bigmodel.cn/api/paas/v4",
@@ -21,7 +21,7 @@ export const defaultProviderConfig = {
   model: "glm-4.5-flash",
   authHeader: "Authorization",
   authPrefix: "Bearer "
-} as const;
+};
 
 function safeParse<T>(value: string | null, fallback: T): T {
   if (!value) return fallback;
@@ -32,7 +32,9 @@ function safeParse<T>(value: string | null, fallback: T): T {
   }
 }
 
-function isLegacyDiary(entry: DiaryEntry | (DiaryEntry & { time?: string })): entry is DiaryEntry {
+type LegacyDiaryEntry = Omit<DiaryEntry, "time"> & { time?: string };
+
+function isMigratedDiary(entry: LegacyDiaryEntry | DiaryEntry): entry is DiaryEntry {
   return typeof (entry as DiaryEntry).time === "string";
 }
 
@@ -43,10 +45,10 @@ function formatTimeFromTimestamp(ts: number): string {
   return `${hours}:${minutes}`;
 }
 
-function migrateDiariesIfNeeded(raw: DiaryEntry[]): DiaryEntry[] {
+function migrateDiariesIfNeeded(raw: Array<DiaryEntry | LegacyDiaryEntry>): DiaryEntry[] {
   let changed = false;
   const migrated = raw.map((entry) => {
-    if (isLegacyDiary(entry)) {
+    if (isMigratedDiary(entry)) {
       return entry;
     }
     changed = true;
@@ -124,7 +126,7 @@ export function getProviderConfig() {
   return { ...defaultProviderConfig, ...stored };
 }
 
-export function setProviderConfig(config: typeof defaultProviderConfig): void {
+export function setProviderConfig(config: ProviderConfig): void {
   window.localStorage.setItem(PROVIDER_CONFIG_KEY, JSON.stringify(config));
 }
 
