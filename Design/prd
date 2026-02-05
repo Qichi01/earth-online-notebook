@@ -1,0 +1,346 @@
+# PRD｜地球 Online · 成就日记（v0）
+
+## 一、产品定位
+一款 **游戏化的 AI 日记产品**。
+用户记录日常生活，系统将其视为「在地球 Online 世界中的行动记录」，通过 AI 自动提炼并反馈：
+- 成就称号
+- 成就夸夸文案（星露谷/成就系统风格）
+- 经验值增长
+- 人物等级变化
+
+### v0 版本目标（最小闭环）
+跑通：**日记输入 → AI 成就生成 → 角色经验/等级增长 → 成就卡展示 → 历史记录可回看**
+交付形态：Web（优先），可在本地或 Vercel 部署。
+
+---
+
+## 二、目标用户
+- 想记录生活但容易放弃的人
+- 需要正向反馈、容易焦虑/自责的人
+- 喜欢轻 RPG/游戏化成长体验的人
+
+---
+
+## 三、核心卖点（v0）
+1. **“把生活翻译成成就”**：把琐碎日常变成可被命名的“身份/成就”
+2. **即时反馈**：写完即得到成就卡与经验值
+3. **成长感**：经验累积 → 升级（即使很小的行动也能“涨点”）
+
+---
+
+## 四、范围界定
+
+### 4.1 v0 必做（MUST）
+- 日记输入（按日期）
+- AI 成就生成（一次输入一次输出，结构化 JSON）
+- 角色经验值/等级系统（本地存储）
+- 成就卡展示（HTML/CSS）
+- 历史记录页（按日期列表与详情）
+- 设置页（用户自带 API Key，BYOK）
+
+### 4.2 v0 选做（NICE TO HAVE）
+- 城市/地点字段（手填或 AI 提取）
+- “今日已生成”限制（同日仅生成 1 次）
+- 失败兜底（不调用 AI 时返回模板成就）
+
+### 4.3 v0 明确不做（OUT OF SCOPE）
+- 社交/关注/分享社区
+- 世界地图可视化（点位、轨迹）
+- 阶段任务系统（拆解、打卡）
+- 商城/皮肤/家园建造
+- 成就图鉴（解锁系统）
+- 多端（iOS/Android）原生应用
+
+---
+
+## 五、用户故事（v0）
+1. 用户打开产品 → 输入今日日记 → 点击“生成今日成就”
+2. 若未设置 API Key → 引导去设置页填写 Key（可返回）
+3. 生成成功 → 展示成就卡（称号+文案+经验+等级）
+4. 自动保存：日记原文与生成结果
+5. 用户进入“历史记录”查看过去每一天的成就
+6. 用户进入“角色页”查看等级与经验进度
+
+---
+
+## 六、信息架构（页面结构）
+
+### 页面 1：Home（日记页）
+- 日期选择（默认今日）
+- 日记输入框（textarea）
+- 可选：地点输入（city）
+- CTA：生成今日成就
+- 成就卡展示区（生成后出现）
+- 提示：同日只生成一次（如启用）
+
+### 页面 2：Profile（角色页）
+- Avatar（v0 可用默认头像占位）
+- 当前等级 Lv.X
+- 当前经验 / 升级所需经验进度条
+- 最近一次获得经验来源（今日成就）
+
+### 页面 3：History（历史记录）
+- 列表：日期 + 今日主称号（第一条 title）+ xp
+- 点击进入详情：日记原文 + 全部称号 + 成就文案 + xp + tags + location
+
+### 页面 4：Settings（设置页）
+- API Provider 选择（v0 默认 user_key，未来扩展 platform_key）
+- API Key 输入框（密码样式）
+- 保存/清除 Key
+- 隐私说明（Key 仅本地保存；日记与 Key 不上传服务器；或仅日记上传但 Key 不上传）
+- 模型选择（可选）：默认一个模型即可（先不暴露复杂项）
+
+---
+
+## 七、核心功能设计
+
+### 7.1 日记记录（Diary Entry）
+**数据字段：**
+- id（uuid）
+- date（YYYY-MM-DD）
+- diaryText（string）
+- location（string|null）
+- createdAt / updatedAt
+
+**规则：**
+- v0 允许每天 1 条日记（可覆盖编辑）
+- 日记保存方式：本地存储（localStorage）优先
+- 可选：使用轻量 DB（如 Supabase）存日记（v0 可不做）
+
+### 7.2 AI 成就生成（Achievement Generation）
+**触发：**点击“生成今日成就”
+**输入：**日记文本（+ 可选地点/日期）
+**输出：**结构化成就 JSON（用于展示与保存）
+
+**同日生成限制（可选）：**
+- 默认：同日仅生成 1 次（避免反复刷）
+- 允许“重新生成”（可选）但需要二次确认
+
+### 7.3 角色经验与等级（Progression）
+**字段：**
+- level（int，初始 1）
+- currentXP（int，初始 0）
+- nextLevelXP（int，初始 100 或按公式计算）
+
+**升级规则（建议 v0 简化）：**
+- nextLevelXP = 100 + (level - 1) * 50
+  - Lv1→Lv2：100
+  - Lv2→Lv3：150
+  - Lv3→Lv4：200
+- 获得 xp 后若超过阈值，循环升级（多级升级也支持）
+
+### 7.4 成就卡（Achievement Card）
+**展示内容：**
+- titles（1～3 个）
+- description（1 段夸夸文案）
+- xp（+N）
+- 当前等级（Lv.X）
+- tags（可选）
+- location.city（可选）
+
+**v0 不做：**
+- 导出图片、分享海报（后续）
+
+---
+
+## 八、模型调用与安全设计（重点）
+
+### 8.1 BYOK（用户自带 Key）策略（v0）
+- 用户在 Settings 页面填写 API Key
+- API Key 只存浏览器 localStorage
+- “清除 Key”按钮一键清空
+- 前端永远不直接请求模型厂商 API
+  → 必须经过后端代理接口（避免 CORS、便于未来切平台 Key）
+
+### 8.2 LLM Provider 抽象（为未来收费版预留）
+系统内部统一抽象 Provider：
+
+- providerType: "user_key" | "platform_key"
+- apiKey: string | null
+
+v0 固定：providerType="user_key"，apiKey 来自 localStorage
+未来收费版：providerType="platform_key"，apiKey 来自服务端环境变量，前端无需改动调用方式
+
+### 8.3 隐私说明（v0）
+- 用户日记默认仅本地保存（推荐）
+- 若后续加入账号/云同步，再扩展隐私策略
+- 日记不会用于训练（提示文案）
+- API Key 不上传服务器（若采用后端代理，需要讨论：
+  - 方案A：前端把 key 传给后端一次性使用（后端不存）
+  - 方案B：完全前端直连模型（不推荐）
+  v0 推荐方案A，后端不落库、不写日志）
+
+---
+
+## 九、接口设计
+
+### 9.1 接口：生成成就
+**POST /api/achievement/generate**
+
+#### Request
+```json
+{
+  "diaryText": "string",
+  "date": "YYYY-MM-DD",
+  "location": "string | null",
+  "provider": {
+    "providerType": "user_key",
+    "apiKey": "string"
+  }
+}
+## 九、接口设计
+
+### 9.1 接口：生成成就
+**POST /api/achievement/generate**
+
+#### Request
+~~~json
+{
+  "diaryText": "string",
+  "date": "YYYY-MM-DD",
+  "location": "string | null",
+  "provider": {
+    "providerType": "user_key",
+    "apiKey": "string"
+  }
+}
+~~~
+
+#### Response（严格 JSON）
+~~~json
+{
+  "titles": ["【健康的人】", "【认真生活的居民】"],
+  "description": "今天你按时吃了两顿饭，也把本来不想面对的事推进了一点点。在疲惫中仍然选择照顾自己，这就是稳定地活着的能力。",
+  "xp": 25,
+  "tags": ["健康", "自律"],
+  "location": { "city": "北京" },
+  "achievement_version": "v0"
+}
+~~~
+
+#### Error Response（示例）
+~~~json
+{
+  "error": "MISSING_API_KEY",
+  "message": "请先在设置页填写 API Key"
+}
+~~~
+
+### 9.2 接口：健康检查（可选）
+**GET /api/health**
+
+#### Response
+~~~json
+{
+  "status": "ok"
+}
+~~~
+
+---
+
+## 十、成就生成 Prompt 规范（v0）
+
+### 10.1 输出要求（必须）
+- 必须输出 JSON（不要输出额外解释文本）
+- 字段必须完整：titles, description, xp, tags, location.city, achievement_version
+- titles 数组长度 1～3
+- xp 为整数，范围建议 10～40（单日上限 40）
+- description 1 段，60～140 字左右（中文）
+
+### 10.2 风格要求
+- 星露谷 / 游戏成就系统语感：命名 + 温柔肯定 + 轻微幽默可选
+- 不油腻、不夸张、不说教
+- 不讽刺，不使用“你应该/你必须”
+- 允许把小事写得很有价值，但不能假大空
+
+### 10.3 成就称号规则
+- 使用【】包裹，偏“身份/角色”而不是“动作复述”
+- 示例：
+  - 【健康的人】
+  - 【劳动楷模】
+  - 【照顾自己的人】
+  - 【没有放弃的人】
+  - 【地球 Online 居民】
+
+### 10.4 经验值判定（建议）
+- 基础行动：+10
+- 有明确推进/完成：+20
+- 明显克服困难/多维行动：+30
+- 特别高能量/很强自我照顾：+40
+由模型根据日记强度判断。
+
+---
+
+## 十一、数据存储设计（v0）
+
+### 11.1 localStorage Keys
+- earthonline_api_key: string
+- earthonline_profile: {level,currentXP,nextLevelXP}
+- earthonline_diaries: DiaryEntry[]
+- earthonline_achievements: {date: AchievementResult}（映射或数组）
+
+### 11.2 数据结构（建议）
+DiaryEntry:
+~~~json
+{
+  "id": "uuid",
+  "date": "2026-01-29",
+  "diaryText": "今天…",
+  "location": "北京",
+  "createdAt": 1730000000,
+  "updatedAt": 1730000000
+}
+~~~
+
+AchievementResult:
+~~~json
+{
+  "date": "2026-01-29",
+  "titles": ["【…】"],
+  "description": "…",
+  "xp": 25,
+  "tags": ["…"],
+  "location": {"city":"北京"},
+  "achievement_version":"v0"
+}
+~~~
+
+---
+
+## 十二、交互与状态
+
+### 12.1 Home 状态机
+- 初始：无成就卡
+- 输入中：按钮可点（若 diaryText < 10 字提示“写多一点点更准”）
+- 生成中：loading
+- 成功：展示卡片 + 保存
+- 失败：toast 提示 +（可选）提供“使用模板成就（离线）”按钮
+
+### 12.2 Settings 交互
+- 未保存 key：提示“AI 成就未启用”
+- 保存 key：提示“已启用 AI 成就”
+- 清除 key：二次确认
+
+---
+
+## 十三、默认 UI 风格（给开发）
+- 整体调性：温柔、有游戏感，但不幼稚
+- 组件：卡片/徽章/进度条
+- 文案：像游戏成就弹窗（但更暖）
+
+---
+
+## 十四、验收标准（v0）
+- 能输入日记并成功生成成就（返回 JSON 并渲染）
+- 成就结果与日记内容具备明显相关性
+- 经验值累积可升级，升级逻辑正确
+- 历史记录可查看每一天日记与成就
+- 设置页可保存/清除 API Key
+- API Key 不落库、不输出到服务端日志（至少不主动记录）
+
+---
+
+## 十五、迭代路线（简要）
+- v1：成就图鉴（类型与稀有度）、重新生成机制、卡片导出
+- v2：地图点位（城市）、阶段任务（AI 拆解）、基础装扮解锁
+- v3：商城/皮肤、家园系统、平台 Key + 订阅/次数包

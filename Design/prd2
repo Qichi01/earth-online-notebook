@@ -1,0 +1,60 @@
+# PRD｜地球 Online · 成就日记（v0+ 配置化 Provider 版）
+
+## 版本目标（本阶段）
+
+**P0 立刻修**
+- 成就生成 API 可用（兼容智谱 OpenAI-compatible 接口）。
+- Provider 层可配置：baseUrl/path/model/authHeader/authPrefix。
+
+**v0 范围确认**
+- 日记输入 → AI 成就生成 → 经验/等级增长 → 成就卡展示 → 历史记录可回看。
+- 支持同日多次记录，每条记录可生成独立成就，互不覆盖。
+- v0 不做手机号/邮箱真实验证注册。
+- v0 不做地图模块。
+- v0 不做完整成就图鉴。
+
+---
+
+## Provider 配置设计（新增）
+
+### 目标
+- 兼容国内主流大模型（OpenAI-compatible 优先）。
+- 能通过 UI 配置并本地保存。
+
+### 配置字段
+- `baseUrl`: string
+- `path`: string（如 `/chat/completions`）
+- `model`: string
+- `authHeader`: string（默认 `Authorization`）
+- `authPrefix`: string（默认 `Bearer `）
+
+### v0 默认配置（智谱）
+- baseUrl: `https://open.bigmodel.cn/api/paas/v4`
+- path: `/chat/completions`
+- auth: `Authorization: Bearer <API_KEY>`
+- model: `glm-4.5-flash`
+
+---
+
+## v1 计划（下一阶段）
+
+### 账号系统
+- 邮箱验证注册/登录（手机号后续追加）。
+
+### 云存储
+- 优先 Supabase（Auth + Postgres）。
+
+### 成就模块
+- 预置成就库（固定成就 id + 徽章 + 条件）。
+- AI 生成时映射到成就 id。
+- 同一成就不重复解锁。
+- 徽章先占位，后续替换真实视觉素材。
+
+---
+
+## v2 计划
+
+### 地图模块
+- 2.5D/轻 3D 美化地图。
+- 黑暗遮罩 + 记录点亮逻辑。
+- 人物交互与动画后置。
