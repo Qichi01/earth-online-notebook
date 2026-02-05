@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 import AchievementCard from "@/components/AchievementCard";
 import Card from "@/components/Card";
 import { formatDate, formatTime, today } from "@/lib/date";
@@ -15,7 +14,7 @@ import {
   getProviderConfig,
   setAchievements,
   setDiaries,
-  setProfile
+  setProfile,
 } from "@/lib/storage";
 import { applyXP } from "@/lib/xp";
 import type { AchievementResult, DiaryEntry } from "@/lib/types";
@@ -24,16 +23,23 @@ export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState<string>(today());
   const [diaryText, setDiaryText] = useState<string>("");
   const [location, setLocation] = useState<string>("");
-  const [currentTime, setCurrentTime] = useState<string>(formatTime(new Date()));
+  const [currentTime, setCurrentTime] = useState<string>(
+    formatTime(new Date()),
+  );
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
-  const [achievementsMap, setAchievementsMap] = useState<Record<string, AchievementResult>>({});
-  const [achievement, setAchievement] = useState<AchievementResult | null>(null);
+  const [achievementsMap, setAchievementsMap] = useState<
+    Record<string, AchievementResult>
+  >({});
+  const [achievement, setAchievement] = useState<AchievementResult | null>(
+    null,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [apiKey, setApiKeyState] = useState<string | null>(null);
-  const [providerConfig, setProviderConfigState] = useState(getProviderConfig());
+  const [providerConfig, setProviderConfigState] =
+    useState(getProviderConfig());
 
   useEffect(() => {
     setApiKeyState(getApiKey());
@@ -49,7 +55,7 @@ export default function HomePage() {
   };
 
   const startNewEntry = (date: string) => {
-    setActiveEntryId(uuidv4());
+    setActiveEntryId(crypto.randomUUID());
     setDiaryText("");
     setLocation("");
     setCurrentTime(formatTime(new Date()));
@@ -67,8 +73,11 @@ export default function HomePage() {
 
   const canGenerate = useMemo(() => diaryText.trim().length >= 5, [diaryText]);
   const isEditingExisting = useMemo(
-    () => Boolean(activeEntryId && entries.some((entry) => entry.id === activeEntryId)),
-    [activeEntryId, entries]
+    () =>
+      Boolean(
+        activeEntryId && entries.some((entry) => entry.id === activeEntryId),
+      ),
+    [activeEntryId, entries],
   );
 
   const handleSelectEntry = (entry: DiaryEntry) => {
@@ -82,7 +91,11 @@ export default function HomePage() {
   };
 
   const handleDiaryChange = (value: string) => {
-    if (!isEditingExisting && diaryText.trim().length === 0 && value.trim().length > 0) {
+    if (
+      !isEditingExisting &&
+      diaryText.trim().length === 0 &&
+      value.trim().length > 0
+    ) {
       setCurrentTime(formatTime(new Date()));
     }
     setDiaryText(value);
@@ -93,7 +106,9 @@ export default function HomePage() {
 
     const diaries = getDiaries();
     const now = Date.now();
-    const existingIndex = diaries.findIndex((entry) => entry.id === activeEntryId);
+    const existingIndex = diaries.findIndex(
+      (entry) => entry.id === activeEntryId,
+    );
 
     const entry: DiaryEntry = {
       id: activeEntryId,
@@ -102,7 +117,7 @@ export default function HomePage() {
       diaryText: diaryText.trim(),
       location: location.trim() || null,
       createdAt: existingIndex >= 0 ? diaries[existingIndex].createdAt : now,
-      updatedAt: now
+      updatedAt: now,
     };
 
     if (existingIndex >= 0) {
@@ -135,7 +150,9 @@ export default function HomePage() {
 
     const existingAchievement = achievementsMap[entry.id];
     if (existingAchievement) {
-      const confirmed = window.confirm("这条记录已经生成过成就，要重新生成吗？");
+      const confirmed = window.confirm(
+        "这条记录已经生成过成就，要重新生成吗？",
+      );
       if (!confirmed) return;
     }
 
@@ -156,9 +173,9 @@ export default function HomePage() {
             path: providerConfig.path,
             model: providerConfig.model,
             authHeader: providerConfig.authHeader,
-            authPrefix: providerConfig.authPrefix
-          }
-        })
+            authPrefix: providerConfig.authPrefix,
+          },
+        }),
       });
 
       if (!response.ok) {
@@ -170,7 +187,7 @@ export default function HomePage() {
       const enriched: AchievementResult = {
         ...result,
         entryId: entry.id,
-        date: entry.date
+        date: entry.date,
       };
 
       const achievements = getAchievements();
@@ -185,7 +202,11 @@ export default function HomePage() {
       setProfile(updatedProfile);
       setNotice(`成就到账，经验 +${enriched.xp}。`);
     } catch (err) {
-      const fallback = buildFallbackAchievement(entry.id, entry.date, entry.location);
+      const fallback = buildFallbackAchievement(
+        entry.id,
+        entry.date,
+        entry.location,
+      );
       const achievements = getAchievements();
       achievements[entry.id] = fallback;
       setAchievements(achievements);
@@ -252,7 +273,8 @@ export default function HomePage() {
                         : "bg-black/5 text-earth-muted"
                     }`}
                   >
-                    {entry.time} · {achievementsMap[entry.id]?.titles?.[0] ?? "还没解锁"}
+                    {entry.time} ·{" "}
+                    {achievementsMap[entry.id]?.titles?.[0] ?? "还没解锁"}
                   </button>
                 ))}
               </div>
