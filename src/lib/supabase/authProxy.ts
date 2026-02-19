@@ -1,9 +1,20 @@
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 function ensureEnv() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     throw new Error("MISSING_SUPABASE_ENV");
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(SUPABASE_URL);
+  } catch {
+    throw new Error("INVALID_SUPABASE_URL");
+  }
+
+  if (!parsed.hostname.endsWith(".supabase.co")) {
+    throw new Error(`INVALID_SUPABASE_HOST:${parsed.hostname}`);
   }
 }
 
@@ -15,36 +26,43 @@ function baseHeaders() {
   };
 }
 
+async function safeFetchJson(url: string, payload: unknown) {
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: baseHeaders(),
+      body: JSON.stringify(payload)
+    });
+
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(json?.msg || json?.error_description || `SUPABASE_HTTP_${response.status}`);
+    }
+
+    return json;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`SUPABASE_FETCH_FAILED:${error.message}`);
+    }
+    throw new Error("SUPABASE_FETCH_FAILED:unknown");
+  }
+}
+
 export async function signInWithPassword(email: string, password: string) {
   ensureEnv();
-  const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: "POST",
-    headers: baseHeaders(),
-    body: JSON.stringify({ email, password })
+  return safeFetchJson(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    email,
+    password
   });
-  const json = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(json?.msg || json?.error_description || "LOGIN_FAILED");
-  }
-  return json;
 }
 
 export async function signUpWithPassword(email: string, password: string, redirectTo: string) {
   ensureEnv();
-  const response = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
-    method: "POST",
-    headers: baseHeaders(),
-    body: JSON.stringify({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectTo
-      }
-    })
+  return safeFetchJson(`${SUPABASE_URL}/auth/v1/signup`, {
+    email,
+    password,
+    options: {
+      emailRedirectTo: redirectTo
+    }
   });
-  const json = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(json?.msg || json?.error_description || "REGISTER_FAILED");
-  }
-  return json;
 }
