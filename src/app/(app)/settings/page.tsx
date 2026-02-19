@@ -6,14 +6,11 @@ import Card from "@/components/Card";
 import {
   clearApiKey,
   getApiKey,
-  getLastSyncAt,
   getProviderConfig,
   setApiKey,
   setProviderConfig
 } from "@/lib/storage";
 import type { ProviderConfig } from "@/lib/types";
-import { supabaseBrowser } from "@/lib/supabase/browser";
-import { pullCloudToLocal, syncLocalToCloud } from "@/lib/cloud";
 
 export default function SettingsPage() {
   const [keyInput, setKeyInput] = useState("");
@@ -21,17 +18,16 @@ export default function SettingsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [providerConfig, setProviderConfigState] = useState<ProviderConfig | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [lastSyncAt, setLastSyncAtState] = useState<number | null>(null);
 
   useEffect(() => {
     const existing = getApiKey();
     setSavedKey(existing);
     setProviderConfigState(getProviderConfig());
-    setLastSyncAtState(getLastSyncAt());
-    supabaseBrowser.auth.getSession().then(({ data }) => {
-      setLoggedIn(Boolean(data.session));
-    });
+
+    fetch("/api/auth/session", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data: { authenticated?: boolean }) => setLoggedIn(Boolean(data.authenticated)))
+      .catch(() => setLoggedIn(false));
   }, []);
 
   const handleSave = () => {
@@ -54,37 +50,10 @@ export default function SettingsPage() {
   };
 
   const handleLogout = async () => {
-    await supabaseBrowser.auth.signOut();
+    await fetch("/api/auth/logout", { method: "POST" });
     setLoggedIn(false);
     setMessage("已退出登录");
-  };
-
-  const handleSyncPush = async () => {
-    setMessage(null);
-    setSyncing(true);
-    try {
-      await syncLocalToCloud(supabaseBrowser);
-      setLastSyncAtState(getLastSyncAt());
-      setMessage("本地记录已同步到云端。");
-    } catch {
-      setMessage("同步失败，请稍后重试。");
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  const handleSyncPull = async () => {
-    setMessage(null);
-    setSyncing(true);
-    try {
-      await pullCloudToLocal(supabaseBrowser);
-      setLastSyncAtState(getLastSyncAt());
-      setMessage("云端记录已拉取到本地。");
-    } catch {
-      setMessage("拉取失败，请稍后重试。");
-    } finally {
-      setSyncing(false);
-    }
+    window.location.href = "/auth";
   };
 
   const handleProviderChange = (field: keyof ProviderConfig, value: string) => {
@@ -151,45 +120,22 @@ export default function SettingsPage() {
           <div className="rounded-lg border border-black/10 bg-white/70 px-4 py-3">
             {loggedIn ? "已登录" : "未登录"}
           </div>
-          {lastSyncAt ? (
-            <div className="text-xs text-earth-muted">
-              上次同步：{new Date(lastSyncAt).toLocaleString()}
-            </div>
-          ) : null}
           {loggedIn ? (
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={handleSyncPush}
-                disabled={syncing}
-                className="w-fit rounded-full bg-earth-accent px-5 py-2 text-white disabled:opacity-60"
-              >
-                {syncing ? "同步中..." : "同步到云端"}
-              </button>
-              <button
-                type="button"
-                onClick={handleSyncPull}
-                disabled={syncing}
-                className="w-fit rounded-full border border-earth-accent/40 px-5 py-2 text-earth-accent disabled:opacity-60"
-              >
-                {syncing ? "拉取中..." : "拉取到本地"}
-              </button>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-fit rounded-full border border-black/10 px-5 py-2 text-earth-muted"
-              >
-                退出登录
-              </button>
-            </div>
-          ) : (
-            <Link
-              href="/auth"
-              className="w-fit rounded-full bg-earth-accent px-5 py-2 text-white"
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-fit rounded-full border border-black/10 px-5 py-2 text-earth-muted"
             >
+              退出登录
+            </button>
+          ) : (
+            <Link href="/auth" className="w-fit rounded-full bg-earth-accent px-5 py-2 text-white">
               去登录
             </Link>
           )}
+          <div className="text-xs text-earth-muted">
+            云同步功能下一步会改为服务端代理模式，当前网络环境下暂不启用。
+          </div>
         </div>
       </Card>
 

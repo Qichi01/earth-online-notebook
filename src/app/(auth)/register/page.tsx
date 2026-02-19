@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import Card from "@/components/Card";
-import { supabaseBrowser } from "@/lib/supabase/browser";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -30,21 +29,25 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
-    const { error } = await supabaseBrowser.auth.signUp({
-      email: email.trim(),
-      password: password.trim(),
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password: password.trim() })
+      });
+
+      const data = (await response.json().catch(() => ({}))) as { message?: string };
+      if (!response.ok) {
+        setMessage(`注册失败：${data.message || "请稍后重试"}`);
+        return;
       }
-    });
-    setLoading(false);
 
-    if (error) {
-      setMessage(`注册失败：${error.message}`);
-      return;
+      setMessage(data.message || "注册成功，请前往邮箱完成验证后再登录。");
+    } catch {
+      setMessage("注册失败：网络不可用，请稍后重试。");
+    } finally {
+      setLoading(false);
     }
-
-    setMessage("注册成功，请前往邮箱完成验证后再登录。");
   };
 
   return (

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { supabaseBrowser } from "@/lib/supabase/browser";
 
 const PUBLIC_ROUTES = new Set(["/auth", "/register", "/auth/callback"]);
 
@@ -15,11 +14,20 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     let active = true;
 
     const check = async () => {
-      const { data } = await supabaseBrowser.auth.getSession();
-      if (!active) return;
+      try {
+        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        const data = (await response.json()) as { authenticated?: boolean };
+        if (!active) return;
 
-      if (!data.session && !PUBLIC_ROUTES.has(pathname)) {
-        router.replace("/auth");
+        if (!data.authenticated && !PUBLIC_ROUTES.has(pathname)) {
+          router.replace("/auth");
+          return;
+        }
+      } catch {
+        if (!PUBLIC_ROUTES.has(pathname)) {
+          router.replace("/auth");
+          return;
+        }
       }
 
       setChecking(false);
@@ -27,15 +35,8 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
     check();
 
-    const { data: subscription } = supabaseBrowser.auth.onAuthStateChange((_event, session) => {
-      if (!session && !PUBLIC_ROUTES.has(pathname)) {
-        router.replace("/auth");
-      }
-    });
-
     return () => {
       active = false;
-      subscription.subscription.unsubscribe();
     };
   }, [pathname, router]);
 

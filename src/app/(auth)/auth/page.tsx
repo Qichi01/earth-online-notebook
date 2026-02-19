@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import Card from "@/components/Card";
-import { supabaseBrowser } from "@/lib/supabase/browser";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -19,18 +18,25 @@ export default function AuthPage() {
     }
 
     setLoading(true);
-    const { error } = await supabaseBrowser.auth.signInWithPassword({
-      email: email.trim(),
-      password: password.trim()
-    });
-    setLoading(false);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password: password.trim() })
+      });
 
-    if (error) {
-      setMessage(`登录失败：${error.message}`);
-      return;
+      const data = (await response.json().catch(() => ({}))) as { message?: string };
+      if (!response.ok) {
+        setMessage(`登录失败：${data.message || "请检查账号密码"}`);
+        return;
+      }
+
+      window.location.href = "/";
+    } catch {
+      setMessage("登录失败：网络不可用，请稍后重试。");
+    } finally {
+      setLoading(false);
     }
-
-    window.location.href = "/";
   };
 
   return (
