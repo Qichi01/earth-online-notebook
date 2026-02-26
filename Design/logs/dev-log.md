@@ -304,3 +304,22 @@
 - `/Users/baibai/claude/4 Earth Online-web:app/src/app/api/auth/register/route.ts`
 - `/Users/baibai/claude/4 Earth Online-web:app/src/app/(auth)/auth/callback/page.tsx`
 - `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
+
+## 2026-02-26（邮箱验证回跳登录页二次修复）
+
+**问题**
+- 邮箱验证链接点击后仍可能直接落到站点首页，没有进入“验证成功提示 -> 登录页”的路径。
+
+**修复**
+- 调整注册请求到 Supabase Auth 的参数，显式同时传递：
+- `signup` 接口 query 参数 `redirect_to`
+- 请求体中的 `options.emailRedirectTo`
+- 请求体中的 `email_redirect_to`
+- 目标是兼容不同的 GoTrue 参数解析路径，强制验证链接回跳到 `/auth/callback?verified=1`，再由回调页清登录态并跳转登录页。
+
+**验证**
+- 本地已通过：`npm run build`
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/supabase/authProxy.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`

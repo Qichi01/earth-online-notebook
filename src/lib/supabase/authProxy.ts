@@ -58,11 +58,16 @@ export async function signInWithPassword(email: string, password: string) {
 
 export async function signUpWithPassword(email: string, password: string, redirectTo: string) {
   ensureEnv();
-  return safeFetchJson(`${SUPABASE_URL}/auth/v1/signup`, {
+  const endpoint = redirectTo
+    ? `${SUPABASE_URL}/auth/v1/signup?redirect_to=${encodeURIComponent(redirectTo)}`
+    : `${SUPABASE_URL}/auth/v1/signup`;
+
+  return safeFetchJson(endpoint, {
     email,
     password,
     options: {
       emailRedirectTo: redirectTo
-    }
+    },
+    email_redirect_to: redirectTo
   });
 }
