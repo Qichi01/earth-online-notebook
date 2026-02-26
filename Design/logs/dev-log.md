@@ -280,3 +280,13 @@
 - 启动站内认证代理：登录/注册/会话/退出改为调用站内 `/api/auth/*`，由服务端转发 Supabase 认证请求。
 - 前端认证页面与 `AuthGate` 已切换为站内接口，不再浏览器直连 `supabase.co`。
 - 设置页登录态与退出改为站内接口，暂时关闭直接云同步入口（下一步改为服务端代理同步）。
+
+## 2026-02-19（邮箱验证提示优化）
+
+**进度概览**
+- 邮箱验证回调页新增明确提示："邮箱验证成功"。
+- 验证成功后跳转登录页，并显示"验证成功，请登录"提示文案。
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/(auth)/auth/callback/page.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/(auth)/auth/page.tsx`

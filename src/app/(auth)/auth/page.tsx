@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Card from "@/components/Card";
 
@@ -9,6 +9,13 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    if (query.get("verified") === "1") {
+      setMessage("验证成功，请登录。");
+    }
+  }, []);
 
   const handleLogin = async () => {
     setMessage(null);
