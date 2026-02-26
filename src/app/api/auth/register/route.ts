@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     const origin = request.headers.get("origin") || "";
-    const redirectTo = origin ? `${origin}/auth` : "";
+    const redirectTo = origin ? `${origin}/auth/callback?verified=1` : "";
 
     await signUpWithPassword(email, password, redirectTo);
 

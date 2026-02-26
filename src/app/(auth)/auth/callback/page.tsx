@@ -4,11 +4,25 @@ import { useEffect } from "react";
 
 export default function AuthCallbackPage() {
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      window.location.replace("/auth?verified=1");
-    }, 1800);
+    let timer: number | undefined;
 
-    return () => window.clearTimeout(timer);
+    const finalize = async () => {
+      try {
+        await fetch("/api/auth/logout", { method: "POST" });
+      } catch {
+        // Ignore logout failure and continue redirect.
+      }
+
+      timer = window.setTimeout(() => {
+        window.location.replace("/auth?verified=1");
+      }, 1800);
+    };
+
+    finalize();
+
+    return () => {
+      if (timer) window.clearTimeout(timer);
+    };
   }, []);
 
   return (

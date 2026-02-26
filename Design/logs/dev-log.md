@@ -290,3 +290,17 @@
 **修改文件**
 - `/Users/baibai/claude/4 Earth Online-web:app/src/app/(auth)/auth/callback/page.tsx`
 - `/Users/baibai/claude/4 Earth Online-web:app/src/app/(auth)/auth/page.tsx`
+
+## 2026-02-19（邮箱验证跳转行为修复）
+
+**问题**
+- 用户点击邮箱验证链接后会直接进入站内主页面，未出现“验证成功，请登录”提示。
+
+**修复**
+- 注册接口将邮箱验证回调地址改为 `/auth/callback?verified=1`。
+- 回调页新增固定成功提示，并在跳转登录页前清理当前登录态，确保回到登录页显示“验证成功，请登录”。
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/api/auth/register/route.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/(auth)/auth/callback/page.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
