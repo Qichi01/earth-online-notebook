@@ -26,7 +26,7 @@ export default function AuthCallbackPage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-earth-bg px-6 text-earth-text">
+    <div className="flex w-full justify-center text-earth-text">
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-soft">
         <div className="text-lg font-semibold">邮箱验证成功</div>
         <p className="mt-2 text-sm text-earth-muted">请使用邮箱和密码登录，正在为你跳转登录页...</p>

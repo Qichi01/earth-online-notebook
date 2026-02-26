@@ -323,3 +323,15 @@
 **修改文件**
 - `/Users/baibai/claude/4 Earth Online-web:app/src/lib/supabase/authProxy.ts`
 - `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
+
+## 2026-02-26（验证成功提示居中微调）
+
+**问题**
+- 邮箱验证成功提示卡片在页面中偏左，不在视觉中心。
+
+**修复**
+- 调整回调页容器布局，改为在认证页主容器内水平居中显示成功提示卡片。
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/(auth)/auth/callback/page.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
