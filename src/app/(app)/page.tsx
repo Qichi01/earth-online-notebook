@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AchievementCard from "@/components/AchievementCard";
 import Card from "@/components/Card";
+import { getAchievementScene } from "@/lib/achievementVisuals";
 import { formatDate, formatTime, today } from "@/lib/date";
 import { buildFallbackAchievement } from "@/lib/fallback";
 import {
@@ -184,10 +185,62 @@ export default function HomePage() {
       }
 
       const result = (await response.json()) as AchievementResult;
+      const scene = getAchievementScene(
+        result,
+        `${entry.diaryText} ${entry.location ?? ""}`
+      );
+      let posterImageUrl = `/api/achievement-card/image?title=${encodeURIComponent(
+        result.titles[0] ?? "【今日成就】"
+      )}&date=${encodeURIComponent(entry.date)}&scene=${encodeURIComponent(scene)}`;
+      let posterPrompt: string | undefined;
+      let imageFallbackReason: string | null = null;
+
+      try {
+        const imageResponse = await fetch("/api/achievement-card/image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: result.titles[0] ?? "【今日成就】",
+            date: entry.date,
+            scene,
+            provider: {
+              providerType: "user_key",
+              apiKey,
+              baseUrl: providerConfig.baseUrl,
+              path: providerConfig.path,
+              model: providerConfig.model,
+              imagePath: providerConfig.imagePath,
+              imageModel: providerConfig.imageModel,
+              imageSize: providerConfig.imageSize,
+              authHeader: providerConfig.authHeader,
+              authPrefix: providerConfig.authPrefix
+            }
+          })
+        });
+
+        if (imageResponse.ok) {
+          const imageBody = (await imageResponse.json()) as {
+            imageUrl?: string;
+            prompt?: string;
+            fallbackUrl?: string;
+          };
+          posterImageUrl = imageBody.imageUrl || imageBody.fallbackUrl || posterImageUrl;
+          posterPrompt = imageBody.prompt;
+        } else {
+          const imageError = (await imageResponse.json().catch(() => ({}))) as { message?: string };
+          imageFallbackReason = imageError.message || "图片生成失败";
+        }
+      } catch {
+        imageFallbackReason = "图片生成请求失败";
+      }
+
       const enriched: AchievementResult = {
         ...result,
         entryId: entry.id,
         date: entry.date,
+        posterImageUrl,
+        posterPrompt,
+        posterScene: scene
       };
 
       const achievements = getAchievements();
@@ -200,8 +253,13 @@ export default function HomePage() {
       const updatedProfile = applyXP(profile, enriched.xp);
       updatedProfile.lastSource = `${formatDate(entry.date)} ${entry.time} 日记成就`;
       setProfile(updatedProfile);
-      setNotice(`成就到账，经验 +${enriched.xp}。`);
+      setNotice(
+        imageFallbackReason
+          ? `成就到账，经验 +${enriched.xp}。成就卡图片暂时走海报兜底：${imageFallbackReason}`
+          : `成就到账，经验 +${enriched.xp}。成就卡图片已生成。`
+      );
     } catch (err) {
+      const message = err instanceof Error ? err.message : "生成失败";
       const fallback = buildFallbackAchievement(
         entry.id,
         entry.date,
@@ -217,7 +275,7 @@ export default function HomePage() {
       const updatedProfile = applyXP(profile, fallback.xp);
       updatedProfile.lastSource = `${formatDate(entry.date)} ${entry.time} 日记成就`;
       setProfile(updatedProfile);
-      setNotice(`成就到账，经验 +${fallback.xp}。`);
+      setNotice(`成就到账，经验 +${fallback.xp}。本次文本成就走离线兜底：${message}`);
     } finally {
       setLoading(false);
     }
@@ -349,7 +407,7 @@ export default function HomePage() {
 
       <Card title="成就卡">
         {achievement ? (
-          <AchievementCard achievement={achievement} />
+          <AchievementCard achievement={achievement} achievements={achievementsMap} />
         ) : (
           <div className="rounded-lg border border-dashed border-black/10 bg-white/50 px-4 py-8 text-center text-sm text-earth-muted">
             等你提交记录，这里会弹出本次成就。

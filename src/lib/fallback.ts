@@ -9,9 +9,9 @@ const titlesPool = [
 ];
 
 const descriptions = [
-  "今天你把日常照顾得很稳，也让待办前进了一小格。步子不大但很踏实，经验条当场+1格。",
-  "你没有被琐事困住，而是把注意力放回到自己身上。这个选择，会在地球 Online 的地图上点亮一小块。",
-  "你愿意记录，说明你在认真对待自己。哪怕只是微小的动作，也在慢慢积累经验，让生活更有方向感。"
+  "系统判定：今天这局没有白开。你把日常稳稳接住，经验条当场往前蹿了一小格，已经算很会过生活了。",
+  "你今天不是在硬撑，而是在认真经营自己。地球 Online 对这种稳定发挥一向很大方，先发经验再说。",
+  "这条记录看起来平静，实际属于闷声拿分型选手。生活没敲锣打鼓，但系统已经偷偷给你结算了。"
 ];
 
 export function buildFallbackAchievement(
@@ -31,6 +31,7 @@ export function buildFallbackAchievement(
     xp,
     tags: ["记录", "日常"],
     location: { city: location || null },
-    achievement_version: "v0"
+    achievement_version: "v0",
+    posterScene: "city-night"
   };
 }

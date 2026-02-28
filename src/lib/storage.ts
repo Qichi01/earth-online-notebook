@@ -19,6 +19,9 @@ export const defaultProviderConfig: ProviderConfig = {
   baseUrl: "https://open.bigmodel.cn/api/paas/v4",
   path: "/chat/completions",
   model: "glm-4.5-flash",
+  imagePath: "/images/generations",
+  imageModel: "glm-image",
+  imageSize: "1024x1024",
   authHeader: "Authorization",
   authPrefix: "Bearer "
 };

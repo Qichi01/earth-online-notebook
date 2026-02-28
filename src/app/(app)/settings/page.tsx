@@ -169,6 +169,38 @@ export default function SettingsPage() {
                 placeholder="glm-4.5-flash"
               />
             </label>
+            <div className="rounded-lg border border-black/10 bg-white/70 px-4 py-3 text-xs text-earth-muted">
+              成就卡图片会单独走图片模型配置。若图片模型不可用，系统会自动回退到本地海报模板。
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <label className="grid gap-2">
+                Image Path
+                <input
+                  value={providerConfig.imagePath}
+                  onChange={(event) => handleProviderChange("imagePath", event.target.value)}
+                  className="rounded-lg border border-black/10 bg-white px-3 py-2"
+                  placeholder="/images/generations"
+                />
+              </label>
+              <label className="grid gap-2">
+                Image Model
+                <input
+                  value={providerConfig.imageModel}
+                  onChange={(event) => handleProviderChange("imageModel", event.target.value)}
+                  className="rounded-lg border border-black/10 bg-white px-3 py-2"
+                  placeholder="glm-image"
+                />
+              </label>
+              <label className="grid gap-2">
+                Image Size
+                <input
+                  value={providerConfig.imageSize}
+                  onChange={(event) => handleProviderChange("imageSize", event.target.value)}
+                  className="rounded-lg border border-black/10 bg-white px-3 py-2"
+                  placeholder="1024x1024"
+                />
+              </label>
+            </div>
             <div className="grid gap-3 md:grid-cols-2">
               <label className="grid gap-2">
                 Auth Header

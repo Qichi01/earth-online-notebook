@@ -335,3 +335,256 @@
 **修改文件**
 - `/Users/baibai/claude/4 Earth Online-web:app/src/app/(auth)/auth/callback/page.tsx`
 - `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
+
+## 2026-02-26（v1 收口完成 + v2 迭代准备）
+
+**v1 完成状态**
+- 生产站点已上线：`https://www.earth-online.life`
+- 邮箱+密码注册/登录链路可用，邮箱验证流程可用。
+- 登录前置与主站隔离已完成（未登录不可访问主功能页）。
+- Provider 配置化、成就生成主链路、同日多记录与历史归档能力稳定可用。
+
+**本次记录**
+- 确认 v1 开发目标已完成，进入 v2 规划与迭代阶段。
+- 启动 v2 准备文档，明确地图模块的迭代方向与阶段边界。
+
+**新增文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/v2-plan.md`
+
+## 2026-02-26（v2 方向调整：成就可视化优先）
+
+**需求调整**
+- v2 优先做成就可视化，不先做地图。
+- 徽章按“成就类型”配置，不是每条成就都单独发一个徽章。
+- 日记页“成就卡”从纯文字升级为带图案设计的视觉卡片，图案根据成就内容生成。
+
+**本次实现**
+- 新增成就分类规则层：根据标题 / 描述 / tags 推断成就类型。
+- 新增类型徽章系统：同一类型按累计记录次数解锁 1～3 枚徽章。
+- 日记页与历史页的成就卡升级为图案化视觉卡片。
+- 角色页新增“徽章柜”，展示已解锁的类型徽章。
+- 优化 AI 提示词，要求输出更具体、可视化的 tags，提升卡片图案匹配稳定性。
+
+**新增文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/achievementVisuals.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/components/AchievementArtwork.tsx`
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/components/AchievementCard.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/(app)/page.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/(app)/history/page.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/(app)/profile/page.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/api/achievement/generate/route.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/v2-plan.md`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
+
+## 2026-02-26（成就卡画面感与文案规则强化）
+
+**问题**
+- 第一版成就卡图画感弱，和成就内容关联不强。
+- AI 文案偏复述记录，不够像“成就结算语”。
+- 同一条记录有时会生成多个并列称号，信息焦点不够集中。
+
+**本次修复**
+- 成就卡视觉从“图标拼贴”升级为“场景插画卡”：
+- 按山顶夜景、城市夜景、咖啡店、厨房、街道、书桌、休整、成长等场景渲染不同画面。
+- 称号改为主标题展示，卡面强化海报感和画面感。
+- 收紧 AI 生成规则：
+- `titles` 固定只保留 1 个最准确的称号。
+- 文案要求避免复述原文，改为更像结算播报 + 轻微幽默。
+- 增加结果清洗逻辑，服务端统一把多称号裁成单称号。
+- 优化离线成就文案，避免兜底文案过于平直。
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/components/AchievementArtwork.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/components/AchievementCard.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/achievementVisuals.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/api/achievement/generate/route.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/fallback.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
+
+## 2026-02-26（成就卡海报化重构）
+
+**需求目标**
+- 将成就卡从 UI 信息卡升级为更接近“像素插画海报”的视觉形式。
+- 减少信息堆叠，突出主标题、场景插画、日期与少量角标信息。
+
+**本次实现**
+- 新增服务端海报图接口：`/api/achievement-card/image`
+- 服务端按场景返回 3:2 SVG 海报图，目前覆盖山顶夜景、城市夜景、咖啡店、街道、书桌等场景模板。
+- 成就卡组件改为海报容器：
+- 海报图全覆盖展示
+- 标题改为叠在图上的大标题
+- 日期固定到左下角，格式 `YYYY.MM.DD`
+- 经验值与小 logo 缩到右下角
+- 标签与描述收缩到海报下方，避免挤占主视觉
+- 当前采用 B 方案：服务端出插画底图，前端叠标题/日期/角标，方便控排版与可读性。
+
+**新增文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/achievementPoster.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/api/achievement-card/image/route.ts`
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/components/AchievementCard.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
+
+## 2026-02-26（成就卡接入真实图片生成链路）
+
+**目标**
+- 将成就卡从纯规则海报模板升级为“真实图片生成优先，SVG 海报兜底”。
+
+**本次实现**
+- 扩展 Provider 配置，增加图片生成专用参数：
+- `imagePath`
+- `imageModel`
+- `imageSize`
+- 新增 OpenAI-compatible 图片生成能力：
+- 兼容 `POST /images/generations`
+- 兼容返回 `url` 或 `b64_json`
+- 成就生成完成后，前端会自动调用 `/api/achievement-card/image` 生成图片海报：
+- 成功则保存真实图片 URL 到成就记录
+- 失败则回退到本地 SVG 海报
+- 设置页新增图片生成模型配置项。
+- Supabase 同步结构补充成就卡图片字段，避免后续同步时丢失海报信息。
+
+**新增文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/achievementPoster.ts`
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/types.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/provider.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/providers/openaiCompatible.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/storage.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/cloud.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/fallback.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/api/achievement-card/image/route.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/(app)/page.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/(app)/settings/page.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/components/AchievementCard.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/v1-schema.sql`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
+
+## 2026-02-26（兜底原因显式提示）
+
+**问题**
+- 当前成就与成就卡失败后会直接兜底，用户只能看到结果，无法判断是“文本生成失败”还是“图片生成失败”。
+
+**修复**
+- 首页生成提示改为区分两种情况：
+- 文本成就失败：明确提示“本次文本成就走离线兜底 + 错误原因”
+- 文本成功但图片失败：明确提示“成就卡图片暂时走海报兜底 + 错误原因”
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/(app)/page.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
+
+## 2026-02-26（成就卡尺寸与图片约束修正）
+
+**问题**
+- 成就卡海报尺寸过大，压迫页面布局。
+- 真实图片生成结果中频繁出现背景文字、气泡文字、标签文字，破坏海报感。
+- 某些日记场景映射仍不够贴近内容，例如“面包”与“模拟面试”类场景。
+
+**本次修复**
+- 缩小成就卡展示宽度，限制为更紧凑的海报布局。
+- 收紧图片生成 prompt，明确禁止：
+- 任何中英文文字
+- 字母
+- 对话气泡
+- 标签
+- 水印
+- 新增更具体的场景映射：
+- `bakery-cozy`
+- `mentor-talk`
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/achievementVisuals.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/api/achievement-card/image/route.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/components/AchievementCard.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
+
+## 2026-02-26（成就卡二次收紧：尺寸与去文字）
+
+**问题**
+- 成就卡在首页里仍然过大。
+- 图片生成 prompt 中仍包含容易诱导模型产出文字的表述，导致背景持续出现大字。
+
+**修复**
+- 成就卡最大宽度从 `max-w-4xl` 收紧到 `max-w-3xl`。
+- 图片 prompt 去掉了 `poster` / `title concept` 这类强诱导文字元素的描述。
+- 明确改为“仅生成背景插画”，并追加：
+- 不允许中文
+- 不允许英文
+- 不允许数字
+- 不允许任何像单词的符号
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/components/AchievementCard.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/api/achievement-card/image/route.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
+
+## 2026-02-26（AI 生图三次收紧：只生成纯背景）
+
+**问题**
+- 即使已经加强约束，模型仍会在画面中私自写字。
+- 原因是 prompt 中仍残留“海报感”和文本语义注入，继续诱导模型产出文字元素。
+
+**修复**
+- 图片 prompt 不再注入标题、描述、tags 文本。
+- 图片生成目标改为：只生成纯背景场景图，不生成任何海报/卡面内文字。
+- 增加统一 `negative_prompt`，进一步压制：
+- text
+- letters
+- words
+- Chinese characters
+- English words
+- numbers
+- logo
+- watermark
+- speech bubble
+- subtitle
+- signboard
+- label
+- poster
+- typography
+- 成就卡容器继续缩小，最大宽度改为 `max-w-2xl`。
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/provider.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/providers/openaiCompatible.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/api/achievement-card/image/route.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/(app)/page.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/components/AchievementCard.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
+
+## 2026-02-26（成就卡布局再收紧 + 场景判断增强）
+
+**问题**
+- 成就卡尺寸依然偏大。
+- 部分日记内容场景判断不准，例如“买到面包”仍可能跑偏到山景/城市类画面。
+
+**修复**
+- 成就卡容器进一步收紧到 `max-w-3xl` 的双栏信息布局，海报与文字区重新分配。
+- 场景判断增加对原始日记内容与地点文本的参与，不再只依赖成就标题与 tags。
+- 图片生成增加按场景的负向约束，进一步排除不相关元素。
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/components/AchievementCard.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/lib/achievementVisuals.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/(app)/page.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/src/app/api/achievement-card/image/route.ts`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`
+
+## 2026-02-26（成就卡文字栏与海报等高修正）
+
+**问题**
+- 新版双栏布局里，右侧文字栏高度没有与左侧海报保持一致。
+
+**修复**
+- 成就卡双栏布局继续收紧，右侧信息栏改为显式 `self-stretch + h-full`。
+- 文字内容重新包裹为内部纵向布局，保证描述区与标签区在整栏内上下分布，整体高度与海报对齐。
+- 右侧栏宽轻微上调，避免等高后文字过于拥挤。
+
+**修改文件**
+- `/Users/baibai/claude/4 Earth Online-web:app/src/components/AchievementCard.tsx`
+- `/Users/baibai/claude/4 Earth Online-web:app/Design/logs/dev-log.md`

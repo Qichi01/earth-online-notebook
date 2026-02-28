@@ -17,6 +17,9 @@ export type AchievementResult = {
   tags: string[];
   location: { city: string | null };
   achievement_version: string;
+  posterImageUrl?: string;
+  posterPrompt?: string;
+  posterScene?: string;
 };
 
 export type ProfileState = {
@@ -33,6 +36,9 @@ export type ProviderConfig = {
   baseUrl: string;
   path: string;
   model: string;
+  imagePath: string;
+  imageModel: string;
+  imageSize: string;
   authHeader: string;
   authPrefix: string;
 };

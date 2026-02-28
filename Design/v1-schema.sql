@@ -40,6 +40,9 @@ create table if not exists public.achievements (
   tags text[] not null,
   location_city text,
   achievement_version text not null,
+  poster_image_url text,
+  poster_prompt text,
+  poster_scene text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

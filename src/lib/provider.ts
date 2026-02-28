@@ -18,6 +18,25 @@ export type ProviderResult = {
   content: string;
 };
 
+export type ProviderImageRequest = {
+  providerType: ProviderType;
+  apiKey: string;
+  model: string;
+  baseUrl: string;
+  path: string;
+  size: string;
+  negativePrompt?: string;
+  auth: ProviderAuth;
+};
+
+export type ProviderImageResult = {
+  imageUrl: string;
+};
+
 export type Provider = {
   generateJson: (prompt: string, request: ProviderRequest) => Promise<ProviderResult>;
+  generateImage: (
+    prompt: string,
+    request: ProviderImageRequest
+  ) => Promise<ProviderImageResult>;
 };

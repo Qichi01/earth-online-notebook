@@ -66,6 +66,9 @@ export async function syncLocalToCloud(client: SupabaseClient) {
         tags: achievement.tags,
         location_city: achievement.location?.city ?? null,
         achievement_version: achievement.achievement_version,
+        poster_image_url: achievement.posterImageUrl ?? null,
+        poster_prompt: achievement.posterPrompt ?? null,
+        poster_scene: achievement.posterScene ?? null,
         created_at: new Date().toISOString()
       }))
     );
@@ -134,7 +137,7 @@ export async function pullCloudToLocal(client: SupabaseClient) {
   const { data: achievementRows } = await client
     .from(ACHIEVEMENTS_TABLE)
     .select(
-      "entry_id,date,titles,description,xp,tags,location_city,achievement_version,created_at"
+      "entry_id,date,titles,description,xp,tags,location_city,achievement_version,poster_image_url,poster_prompt,poster_scene,created_at"
     )
     .eq("user_id", user.id);
 
@@ -150,7 +153,10 @@ export async function pullCloudToLocal(client: SupabaseClient) {
           xp: row.xp,
           tags: row.tags,
           location: { city: row.location_city ?? null },
-          achievement_version: row.achievement_version
+          achievement_version: row.achievement_version,
+          posterImageUrl: row.poster_image_url ?? undefined,
+          posterPrompt: row.poster_prompt ?? undefined,
+          posterScene: row.poster_scene ?? undefined
         };
       }
     });

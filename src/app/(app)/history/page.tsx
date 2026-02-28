@@ -103,7 +103,7 @@ export default function HistoryPage() {
 
         <Card title="成就回放">
           {selectedAchievement ? (
-            <AchievementCard achievement={selectedAchievement} />
+            <AchievementCard achievement={selectedAchievement} achievements={achievements} />
           ) : (
             <div className="rounded-lg border border-dashed border-black/10 bg-white/50 px-4 py-8 text-center text-sm text-earth-muted">
               当天还没有成就记录。
